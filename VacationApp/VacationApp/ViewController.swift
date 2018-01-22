@@ -15,8 +15,12 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
 
     @IBOutlet var sceneView: ARSCNView!
     
+    var photoButton: UIButton!
+    var firstLabel: UILabel!
+    var secondLabel: UILabel!
+    
     var detectedDataAnchor: ARAnchor?
-    var processing = false
+    var processing: Bool!
     var modelName = "cup"
     var photo: UIImage!
     
@@ -30,18 +34,48 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         sceneView.showsStatistics = false
         self.createPhotoButton()
         self.createBackButton()
+        self.createFirstLabel()
     }
     
     func createPhotoButton(){
         
         let buttonSize:CGFloat = 70.0
-        let photoButton = UIButton(type: UIButtonType.custom)
+        photoButton = UIButton(type: UIButtonType.custom)
         photoButton.frame = CGRect(x: ((self.view.frame.midX) - (buttonSize/2.0)), y: (self.view.frame.height*0.87), width: buttonSize, height: buttonSize)
         photoButton.setImage(UIImage.init(named: "cameraButton"), for: .normal)
+        photoButton.setTitleShadowColor(UIColor.black, for: .normal)
         photoButton.addTarget(self, action:  #selector(goNextVc), for: .touchUpInside)
+        photoButton.isHidden = true
         sceneView.addSubview(photoButton)
-
     }
+    
+    
+    func createFirstLabel(){
+        let labelSize = CGRect(x:self.view.frame.width*0.05, y: self.view.frame.height*0.25, width: self.view.frame.width*0.90, height: 100)
+        firstLabel = UILabel(frame: labelSize)
+        firstLabel.text = "Posicione a câmera em frente ao QrCode"
+        firstLabel.font = UIFont(name: "AvenirNext-DemiBold", size: 25)
+        firstLabel.textColor = UIColor.white
+        firstLabel.textAlignment = NSTextAlignment.center
+        firstLabel.numberOfLines = 0
+        sceneView.addSubview(firstLabel)
+    }
+
+    func createSecondLabel(){
+        let labelSize = CGRect(x:self.view.frame.width*0.05, y: self.view.frame.height*0.25, width: self.view.frame.width*0.90, height: 100)
+        secondLabel = UILabel(frame: labelSize)
+        secondLabel.text = "Agora, aproveite e tire uma foto"
+        secondLabel.font = UIFont(name: "AvenirNext-DemiBold", size: 25)
+        secondLabel.textColor = UIColor.white
+        secondLabel.textAlignment = NSTextAlignment.center
+        secondLabel.numberOfLines = 0
+        sceneView.addSubview(secondLabel)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            self.secondLabel.isHidden = true
+        }
+    }
+
     
     func createBackButton(){
         
@@ -70,13 +104,15 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
+        self.processing = false
         let configuration = ARWorldTrackingConfiguration()
         sceneView.session.run(configuration)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        
+        self.sceneView.scene.rootNode.enumerateChildNodes { (node, stop) in
+            node.removeFromParentNode() }
         sceneView.session.pause()
     }
     
@@ -162,8 +198,11 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
             
             // Set its position based off the anchor
             wrapperNode.transform = SCNMatrix4(anchor.transform)
-            print (wrapperNode.position)
-            print (wrapperNode.worldPosition)
+            DispatchQueue.main.async {
+                self.photoButton.isHidden = false
+                self.firstLabel.removeFromSuperview()
+                self.createSecondLabel()
+            }
             return wrapperNode
         }
         

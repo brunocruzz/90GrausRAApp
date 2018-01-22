@@ -23,7 +23,7 @@ class ShareViewController: UIViewController {
 
 
     @IBAction func cancelButton(_ sender: Any) {
-        self.navigationController?.popViewController(animated: true)
+        self.navigationController?.popToRootViewController(animated: true)
     }
     
     @IBAction func shareImage(_ sender: Any) {
